@@ -1,0 +1,209 @@
+
+
+
+
+   1    8478.aced.5847    DYNAMIC     Fa0/5
+   1    ccd8.c1fa.ee43    DYNAMIC     Fa0/7
+   
+!@CoreBABA
+conf t
+ monitor session 1 source int fa0/3, fa0/5, fa0/7
+ monitor session 1 destination int fa0/1
+end
+
+   
+
+
+for DNS
+
+!@UTM-PH
+conf t
+ ip domain lookup
+ ip name-server 8.8.8.8
+ end
+ 
+ 
+ 
+ youporn.com 		66.254.114.79
+ pornhub.com		66.254.114.41
+ bangbus.com		66.254.114.234
+ redtube.com		66.254.114.238
+ faketaxi.com		66.254.114.234
+ 
+ xhamster.com  		104.16.4.81
+ sulasok.com  		185.53.179.136
+ vivamax.com		64.98.135.95
+ 
+ 
+ === How to config access list for basic L3 FW ===
+ 
+ !@UTM-PH - deny
+ conf t
+	ip access-list standard FWP1
+	 deny 66.254.114.0 0.0.0.255
+	 deny host 104.16.4.81
+	 deny host 185.53.179.136
+	 deny host 64.98.135.95
+	  permit any
+	  
+	int gig 1
+	 ip access-group FWP1 in
+	 
+end
+
+!@UTM-PH - allow
+conf t
+	int gig 1
+	 no ip access-group FWP1 in
+	 
+end
+
+=== L4 FW ===
+
+!@UTM-PH - format -
+conf t
+ no ip access-list extended FWP4
+ ip access-list extended FWP4
+ permit __ Any host www.____.com eq __ log
+ permit __ Any host www.____.com eq __ log
+ permit __ Any host www.____.com log
+ permit __ Any host www.____.com eq __ log
+ permit __ Any host www.____.com eq __ log
+ Int gi 1
+  ip access-group FWP4 in
+  end
+  
+  
+!@UTM-PH
+conf t
+ no ip access-list extended FWP4
+ ip access-list extended FWP4
+ permit tcp Any host www.bet100.com eq 80 log
+ permit tcp Any host www.bet100.com eq 443 log
+ permit icmp Any host www.bet100.com log
+ permit tcp Any host www.bet100.com eq 22 log
+ permit tcp Any host www.bet100.com eq 53 log
+ Int gi 1
+  no ip access-group FWP4 in
+  end
+  
+  = Activity =
+  
+Create an access-list named FWP6 to open the following ports:  
+www.bet100.com open only sccp, sip, imap, smtp, pop3, ftp, tftp, ntp
+
+!@UTM-PH
+conf t
+ no ip access-list extended FWP5
+ ip access-list extended FWP5
+ permit tcp Any host www.bet100.com eq 2000 log
+ permit tcp Any host www.bet100.com eq 5060 log
+ permit tcp Any host www.bet100.com eq 143 log
+ permit tcp Any host www.bet100.com eq 25 log
+ permit tcp Any host www.bet100.com eq 110 log
+ permit tcp Any host www.bet100.com eq 21 log
+ permit udp Any host www.bet100.com eq 69 log
+ permit udp Any host www.bet100.com eq 123 log
+ Int gi 3
+  ip access-group FWP6 in
+  end
+  
+  
+== NAT Config ==
+
+!@UTM-PH
+!Define inside ang outside
+
+conf t
+ int gi1
+  ip nat outside
+  
+ int gi3
+  ip nat inside
+  
+end
+
+
+!@UTM-PH
+!Create an acl to 
+
+conf t
+ access-list 1 permit any
+
+end
+
+UTM-PH#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+UTM-PH(config)# Int gi 1
+UTM-PH(config-if)#  ip access-group FWP4 in
+UTM-PH(config-if)#  end
+UTM-PH#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+UTM-PH(config)# Int gi 1
+UTM-PH(config-if)#  no ip access-group FWP4 in
+UTM-PH(config-if)#  end
+UTM-PH#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+UTM-PH(config)#int gi1
+UTM-PH(config-if)#ip nat outside
+UTM-PH(config-if)#int g3
+UTM-PH(config-if)#ip nat inside
+UTM-PH(config-if)#acce
+UTM-PH(config-if)#access-l
+UTM-PH(config-if)#access-li
+UTM-PH(config-if)#access-lis
+UTM-PH(config-if)#end       
+UTM-PH#acc
+UTM-PH#access-li
+UTM-PH#access-list
+UTM-PH#access-list 1 permit any
+              ^
+% Invalid input detected at '^' marker.
+
+UTM-PH#conf t                  
+Enter configuration commands, one per line.  End with CNTL/Z.
+UTM-PH(config)#access-list 1 permit any
+UTM-PH(config)#ip nat insid
+UTM-PH(config)#ip nat inside sour
+UTM-PH(config)#ip nat inside source list 1 int g1 over
+UTM-PH(config)#ip nat inside source list 1 int g1 overload 
+UTM-PH(config)#end
+UTM-PH# 
+
+
+
+----------------------------------------------------------------
+
+
+!@WEB1
+sudo su
+hostname WEB1
+ifconfig eth0 10.11.11.101 netmask 255.255.255.224 up
+route add default gw 10.11.11.113
+ping 10.11.11.113
+
+!@WEB2
+sudo su
+hostname WEB2
+ifconfig eth0 10.11.11.102 netmask 255.255.255.224 up
+route add default gw 10.11.11.113
+ping 10.11.11.113
+
+
+-------------------------------------------------------------------
+!@UTM-PH
+conf t
+ ip nat inside source static tcp 10.11.11.101 80  208.8.8.12 8080
+ ip nat inside source static tcp 10.11.11.102 443 208.8.8.12 8443
+ ip nat inside source static tcp 10.11.11.101 443 208.8.8.12 443
+ ip nat inside source static tcp 10.11.11.102 80  208.8.8.12 80
+ 
+sh ip nat translation
+
+-------------------------------------------------------------------
+ ip nat inside source static tcp 10.11.11.101 22  208.8.8.105 4444
+ ip nat inside source static tcp 10.11.11.102 22  208.8.8.205 4444
+ 
+
+
+
